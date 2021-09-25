@@ -1,4 +1,5 @@
-"""This function transforms Matlab7.3 HDF5 '.mat' files into a Python
+"""
+This function transforms Matlab7.3 HDF5 '.mat' files into a Python
 dictionary of arrays and strings (and some leftover).
 
 Copyright 2012, Emanuele Olivetti
@@ -52,7 +53,6 @@ def recursive_dict(f, root=None, name='root'):
         if u'#refs#' in a.keys(): # we don't want to keep this
             del(a[u'#refs#'])
         for k in a.keys():
-            # print k
             a[k] = recursive_dict(f[k], root, name=name+'->'+k)
         return a
     elif hasattr(f, 'shape'):
@@ -62,9 +62,9 @@ def recursive_dict(f, root=None, name='root'):
             add_dtype_name(f, name)
             dtype = f.dtype
             if (np.prod(f.shape)*f.dtype.itemsize) > 2e9:
-                print "WARNING: The array", name, "requires > 2Gb"
+                print("WARNING: The array", name, "requires > 2Gb")
                 if f.dtype.char=='d':
-                    print "\t Recasting", dtype, "to float32"
+                    print("\t Recasting", dtype, "to float32")
                     dtype = np.float32
                 else:
                     raise MemoryError
@@ -74,11 +74,11 @@ def recursive_dict(f, root=None, name='root'):
             try:
                 return string(f)
             except ValueError: # it wasn't...
-                print "WARNING:", name, ":"
-                print "\t", f
-                print "\t CONVERSION TO STRING FAILED, USING ARRAY!"
+                print("WARNING:", name, ":")
+                print("\t", f)
+                print("\t CONVERSION TO STRING FAILED, USING ARRAY!")
                 tmp = np.array(f).squeeze()
-                print "\t", tmp
+                print("\t", tmp)
                 return tmp
             pass
         elif f.dtype.name=='object': # this is a 2D array of HDF5 object references or just objects
@@ -93,9 +93,9 @@ def recursive_dict(f, root=None, name='root'):
             try:
                 return np.array(container).squeeze()
             except ValueError:
-                print "WARNING:", name, ":"
-                print "\t", container
-                print "\t CANNOT CONVERT INTO NON-OBJECT ARRAY"
+                print("WARNING:", name, ":")
+                print("\t", container)
+                print("\t CANNOT CONVERT INTO NON-OBJECT ARRAY")
                 return np.array(container, dtype=np.object).squeeze()
         else:
             raise NotImplemented
@@ -129,14 +129,13 @@ class Node(object):
         if root is None: root = f
         self.__name = name
         if recursive:
-            print "Recursively parsing", f
+            print("Recursively parsing", f)
             self.__recursive(f, root)
 
     def __recursive(self, f, root):
         if hasattr(f, 'keys'):
             for k in f.keys():
                 if k == u'#refs#': continue # skip reference store
-                # print k
                 child = Node(name=k)
                 tmp = child.__recursive(f[k], root)
                 if tmp is None: tmp = child
@@ -144,26 +143,24 @@ class Node(object):
             return None
         elif hasattr(f, 'shape'):
             if f.dtype.name not in ['object', 'uint16']: # this is a numpy array
-                # print "ARRAY!"
                 dtype = f.dtype
                 if (np.prod(f.shape)*f.dtype.itemsize) > 2e9:
-                    print "WARNING: The array", self.__name, "requires > 2Gb"
+                    print("WARNING: The array", self.__name, "requires > 2Gb")
                     if f.dtype.char=='d':
-                        print "\t Recasting", dtype, "to float32"
+                        print("\t Recasting", dtype, "to float32")
                         dtype = np.float32
                     else:
                         raise MemoryError
                 return np.array(f, dtype=dtype).squeeze()
             elif f.dtype.name in ['uint16']: # this may be a string for Matlab
-                # print "STRING!"
                 try:
                     return string(f)
                 except ValueError: # it wasn't...
-                    print "WARNING:", self.__name, ":"
-                    print "\t", f
-                    print "\t CONVERSION TO STRING FAILED, USING ARRAY!"
+                    print("WARNING:", self.__name, ":")
+                    print("\t", f)
+                    print("\t CONVERSION TO STRING FAILED, USING ARRAY!")
                     tmp = np.array(f).squeeze()
-                    print "\t", tmp
+                    print("\t", tmp)
                     return tmp
                 pass
             elif f.dtype.name=='object': # this is a 2D array of HDF5 object references or just objects
@@ -182,9 +179,9 @@ class Node(object):
                 try:
                     return np.array(container).squeeze()
                 except ValueError:
-                    print "WARNING:", self.__name, ":"
-                    print "\t", container
-                    print "\t CANNOT CONVERT INTO NON-OBJECT ARRAY"
+                    print("WARNING:", self.__name, ":")
+                    print("\t", container)
+                    print("\t CANNOT CONVERT INTO NON-OBJECT ARRAY")
                     return np.array(container, dtype=np.object).squeeze()
             else:
                 raise NotImplemented
@@ -200,7 +197,7 @@ if __name__ == '__main__':
 
     filename = sys.argv[-1]
 
-    print "Loading", filename
+    print("Loading", filename)
 
     f = h5py.File(filename, mode='r')
 
@@ -209,7 +206,7 @@ if __name__ == '__main__':
     # data = Node(f)
     
     filename = filename[:-4]+".pickle"
-    print "Saving", filename
+    print("Saving", filename)
     pickle.dump(data, open(filename,'w'),
                 protocol=pickle.HIGHEST_PROTOCOL)
 
